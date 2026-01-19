@@ -1,75 +1,80 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import API from "../services/api";
 
 export default function UserDashboard() {
+  const navigate = useNavigate();
   const [events, setEvents] = useState([]);
-  const [myRegistrations, setMyRegistrations] = useState([]);
+  const [registrations, setRegistrations] = useState([]);
 
-  const logout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("role");
-    window.location.href = "/";
+  // 🔐 Auth guard
+  useEffect(() => {
+    if (!localStorage.getItem("token")) {
+      navigate("/");
+    }
+  }, []);
+
+  // 📥 Fetch events
+  const loadEvents = async () => {
+    const res = await API.get("/events");
+    setEvents(res.data);
   };
 
-  // Fetch all events
+  // 📥 Fetch my registrations
+  const loadRegistrations = async () => {
+    const res = await API.get("/registrations/me");
+    setRegistrations(res.data);
+  };
+
   useEffect(() => {
-    API.get("/events").then(res => setEvents(res.data));
+    loadEvents();
+    loadRegistrations();
   }, []);
 
-  // Fetch user's registrations (STATUS)
-  useEffect(() => {
-    API.get("/registrations/me").then(res => setMyRegistrations(res.data));
-  }, []);
-
-  const registerEvent = async (id) => {
+  const registerEvent = async (eventId) => {
     try {
-      await API.post(`/registrations/${id}`);
+      await API.post(`/registrations/${eventId}`);
       alert("Registered successfully");
-      window.location.reload();
+      loadEvents();
+      loadRegistrations();
     } catch (err) {
       alert(err.response?.data?.message || "Registration failed");
     }
   };
 
+  const alreadyRegistered = (eventId) =>
+    registrations.some(r => r.event._id === eventId);
+
   return (
-    <div className="dashboard">
+    <div className="container">
       <h2>User Dashboard</h2>
-      <button className="logout" onClick={logout}>Logout</button>
 
-      {/* EVENT LIST */}
-      <div className="section">
-        <h3>Available Events</h3>
+      <button onClick={() => {
+        localStorage.clear();
+        navigate("/");
+      }}>
+        Logout
+      </button>
 
-        {events.map(e => (
-          <div key={e._id} className="card">
-            <p><strong>{e.title}</strong></p>
-            <p>Available Seats: {e.capacity - e.registeredCount}</p>
+      <h3>Available Events</h3>
 
+      {events.map(event => (
+        <div key={event._id} style={{ border: "1px solid #ccc", padding: 10, marginBottom: 10 }}>
+          <p><b>{event.title}</b></p>
+          <p>{event.registeredCount} / {event.capacity}</p>
+
+          {alreadyRegistered(event._id) ? (
+            <p style={{ color: "green" }}>Already Registered</p>
+          ) : (
             <button
-              disabled={e.registeredCount >= e.capacity}
-              onClick={() => registerEvent(e._id)}
+              disabled={event.registeredCount >= event.capacity}
+              onClick={() => registerEvent(event._id)}
             >
-              Register
+              {event.registeredCount >= event.capacity ? "Event Full" : "Register"}
             </button>
-          </div>
-        ))}
-      </div>
-
-      {/* REGISTRATION STATUS */}
-      <div className="section">
-        <h3>My Registrations</h3>
-
-        {myRegistrations.length === 0 && (
-          <p>No registrations yet</p>
-        )}
-
-        {myRegistrations.map(r => (
-          <div key={r._id} className="card">
-            <p><strong>Event:</strong> {r.eventId.title}</p>
-            <p><strong>Status:</strong> {r.status}</p>
-          </div>
-        ))}
-      </div>
+          )}
+        </div>
+      ))}
     </div>
   );
 }

@@ -1,82 +1,83 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import API from "../services/api";
 
 export default function OrganizerDashboard() {
-  const [events, setEvents] = useState([]);
+  const navigate = useNavigate();
   const [title, setTitle] = useState("");
   const [capacity, setCapacity] = useState("");
-  const [registrations, setRegistrations] = useState([]);
+  const [events, setEvents] = useState([]);
 
-  const logout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("role");
-    window.location.href = "/";
-  };
-
+  // 🔐 Auth check
   useEffect(() => {
-    API.get("/events").then(res => setEvents(res.data));
+    const token = localStorage.getItem("token");
+    if (!token) navigate("/");
   }, []);
 
+  const fetchEvents = () => {
+    API.get("/events")
+      .then(res => setEvents(res.data))
+      .catch(() => alert("Failed to load events"));
+  };
+
+  useEffect(fetchEvents, []);
+
   const createEvent = async () => {
+    if (!title || !capacity) {
+      alert("All fields required");
+      return;
+    }
+
     try {
-      await API.post("/events", { title, capacity });
+      await API.post("/events", {
+        title,
+        capacity: Number(capacity)
+      });
       alert("Event created");
-      window.location.reload();
-    } catch {
-      alert("Failed to create event");
+      setTitle("");
+      setCapacity("");
+      fetchEvents();
+    } catch (err) {
+      alert(err.response?.data?.message || "Failed to create event");
     }
   };
 
-  const viewRegistrations = async (id) => {
-    const res = await API.get(`/registrations/event/${id}`);
-    setRegistrations(res.data);
-  };
-
   return (
-  <div className="dashboard">
-    <button className="logout" onClick={logout}>Logout</button>
+    <div className="container">
+      <h2>Organizer Dashboard</h2>
 
-    <h2>Organizer Dashboard</h2>
+      <button onClick={() => {
+        localStorage.clear();
+        navigate("/");
+      }}>
+        Logout
+      </button>
 
-    <div className="section">
       <h3>Create Event</h3>
+
       <input
-        placeholder="Title"
+        placeholder="Event Title"
+        value={title}
         onChange={e => setTitle(e.target.value)}
       />
+
       <input
+        type="number"
         placeholder="Capacity"
+        value={capacity}
         onChange={e => setCapacity(e.target.value)}
       />
-      <button className="center-btn" onClick={createEvent}>
-        Create
-      </button>
-    </div>
 
-    <div className="section">
+      <button onClick={createEvent}>Create Event</button>
+
       <h3>Your Events</h3>
 
-      <div className="event-list">
-        {events.map(e => (
-          <div key={e._id} className="card">
-            <p>{e.title}</p>
-            <button
-              className="center-btn"
-              onClick={() => viewRegistrations(e._id)}
-            >
-              View Registrations
-            </button>
-          </div>
-        ))}
-      </div>
-    </div>
-
-    <div className="section">
-      <h3>Registrations</h3>
-      {registrations.map(r => (
-        <p key={r._id}>{r.userId.email}</p>
+      {events.map(event => (
+        <div key={event._id} style={{ border: "1px solid #ccc", padding: "10px", marginBottom: "10px" }}>
+          <p><b>{event.title}</b></p>
+          <p>Registrations: {event.registeredCount} / {event.capacity}</p>
+        </div>
       ))}
     </div>
-  </div>
-);
+  );
 }

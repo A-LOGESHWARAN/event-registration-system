@@ -1,38 +1,46 @@
-import { useState } from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
+
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import UserDashboard from "./pages/UserDashboard";
 import OrganizerDashboard from "./pages/OrganizerDashboard";
 
-export default function App() {
-  const role = localStorage.getItem("role");
-  const [showLogin, setShowLogin] = useState(true);
+// 🔐 Simple auth guard
+const ProtectedRoute = ({ children }) => {
+  const token = localStorage.getItem("token");
+  return token ? children : <Navigate to="/" />;
+};
 
-  if (!role) {
-    return (
-      <div className="container">
-        <div className="switch-container">
-          <button
-            className={`switch-btn ${showLogin ? "active" : ""}`}
-            onClick={() => setShowLogin(true)}
-          >
-            Login
-          </button>
+function App() {
+  return (
+    <Routes>
+      {/* Public Routes */}
+      <Route path="/" element={<Login />} />
+      <Route path="/register" element={<Register />} />
 
-          <button
-            className={`switch-btn ${!showLogin ? "active" : ""}`}
-            onClick={() => setShowLogin(false)}
-          >
-            Register
-          </button>
-        </div>
+      {/* Protected Routes */}
+      <Route
+        path="/user"
+        element={
+          <ProtectedRoute>
+            <UserDashboard />
+          </ProtectedRoute>
+        }
+      />
 
-        {showLogin ? <Login /> : <Register />}
-      </div>
-    );
-  }
+      <Route
+        path="/organizer"
+        element={
+          <ProtectedRoute>
+            <OrganizerDashboard />
+          </ProtectedRoute>
+        }
+      />
 
-  return role === "USER"
-    ? <UserDashboard />
-    : <OrganizerDashboard />;
+      {/* Fallback */}
+      <Route path="*" element={<Navigate to="/" />} />
+    </Routes>
+  );
 }
+
+export default App;
