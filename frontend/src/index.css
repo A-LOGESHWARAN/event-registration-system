@@ -1,0 +1,117 @@
+/* Global reset */
+* {
+  box-sizing: border-box;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+body {
+  margin: 0;
+  background-color: #f5f6fa;
+  color: #333;
+}
+
+/* Container */
+.container {
+  max-width: 600px;
+  margin: 40px auto;
+  background: #fff;
+  padding: 20px;
+  border-radius: 6px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+/* Headings */
+h2, h3 {
+  text-align: center;
+}
+
+/* Inputs & Select */
+input, select {
+  width: 100%;
+  padding: 8px;
+  margin: 8px 0;
+}
+
+/* Buttons */
+button {
+  padding: 8px 12px;
+  margin-top: 10px;
+  background-color: #4f46e5;
+  color: white;
+  border: none;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+button:hover {
+  background-color: #4338ca;
+}
+
+button:disabled {
+  background-color: #aaa;
+  cursor: not-allowed;
+}
+
+/* Event Card */
+.card {
+  border: 1px solid #ddd;
+  padding: 12px;
+  margin: 12px 0;
+  border-radius: 4px;
+}
+
+/* Logout button */
+.logout {
+  background-color: #ef4444;
+  margin-bottom: 15px;
+}
+
+.logout:hover {
+  background-color: #dc2626;
+}
+
+/* Switch container */
+.switch-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 15px;
+}
+
+/* Switch button */
+.switch-btn {
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid #4f46e5;
+  background-color: white;
+  color: #4f46e5;
+  cursor: pointer;
+  margin: 0 5px;
+}
+
+.switch-btn.active {
+  background-color: #4f46e5;
+  color: white;
+}
+
+/* Dashboard layout */
+.dashboard {
+  max-width: 800px;
+  margin: 40px auto;
+  text-align: center;
+}
+
+/* Section spacing */
+.section {
+  margin-top: 30px;
+}
+
+/* Event list */
+.event-list {
+  margin-top: 20px;
+}
+
+/* Center buttons */
+.center-btn {
+  display: block;
+  margin: 10px auto;
+}
