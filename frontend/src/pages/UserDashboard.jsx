@@ -1,80 +1,90 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../services/api";
+import "./dashboard.css";
 
 export default function UserDashboard() {
-  const navigate = useNavigate();
   const [events, setEvents] = useState([]);
   const [registrations, setRegistrations] = useState([]);
-
-  // 🔐 Auth guard
-  useEffect(() => {
-    if (!localStorage.getItem("token")) {
-      navigate("/");
-    }
-  }, []);
-
-  // 📥 Fetch events
-  const loadEvents = async () => {
-    const res = await API.get("/events");
-    setEvents(res.data);
-  };
-
-  // 📥 Fetch my registrations
-  const loadRegistrations = async () => {
-    const res = await API.get("/registrations/me");
-    setRegistrations(res.data);
-  };
+  const navigate = useNavigate();
 
   useEffect(() => {
-    loadEvents();
-    loadRegistrations();
+    // Load events
+    API.get("/events")
+      .then(res => setEvents(res.data))
+      .catch(err => console.error(err));
+
+    // Load registration status
+    API.get("/registrations/my")
+      .then(res => {
+        console.log("MY REGISTRATIONS:", res.data); // 🔥 DEBUG
+        setRegistrations(res.data);
+      })
+      .catch(err => console.error("REG STATUS ERROR:", err));
   }, []);
 
-  const registerEvent = async (eventId) => {
+  const register = async (id) => {
     try {
-      await API.post(`/registrations/${eventId}`);
-      alert("Registered successfully");
-      loadEvents();
-      loadRegistrations();
+      const res = await API.post(`/registrations/${id}`);
+      alert(res.data.message);
+      window.location.reload();
     } catch (err) {
       alert(err.response?.data?.message || "Registration failed");
     }
   };
 
-  const alreadyRegistered = (eventId) =>
-    registrations.some(r => r.event._id === eventId);
+  const logout = () => {
+    localStorage.clear();
+    navigate("/login");
+  };
 
   return (
-    <div className="container">
-      <h2>User Dashboard</h2>
+    <div className="dashboard">
+      {/* 🔴 LOGOUT BUTTON */}
+      <div className="top-bar">
+        <button className="logout-btn" onClick={logout}>
+          Logout
+        </button>
+      </div>
 
-      <button onClick={() => {
-        localStorage.clear();
-        navigate("/");
-      }}>
-        Logout
-      </button>
+      <h2>Available Events</h2>
 
-      <h3>Available Events</h3>
+      <div className="event-list">
+        {events.map(e => {
+          const isFull = e.registeredCount >= e.capacity;
 
-      {events.map(event => (
-        <div key={event._id} style={{ border: "1px solid #ccc", padding: 10, marginBottom: 10 }}>
-          <p><b>{event.title}</b></p>
-          <p>{event.registeredCount} / {event.capacity}</p>
+          return (
+            <div key={e._id} className="event-card">
+              <h3>{e.title}</h3>
+              <p>
+                {e.registeredCount} / {e.capacity}
+              </p>
 
-          {alreadyRegistered(event._id) ? (
-            <p style={{ color: "green" }}>Already Registered</p>
-          ) : (
-            <button
-              disabled={event.registeredCount >= event.capacity}
-              onClick={() => registerEvent(event._id)}
-            >
-              {event.registeredCount >= event.capacity ? "Event Full" : "Register"}
-            </button>
-          )}
+              <button
+                disabled={isFull}
+                className={isFull ? "btn disabled" : "btn"}
+                onClick={() => register(e._id)}
+              >
+                {isFull ? "Event Full" : "Register"}
+              </button>
+            </div>
+          );
+        })}
+      </div>
+
+      <h2>My Registration Status</h2>
+
+      {registrations.length === 0 ? (
+        <p>No registrations yet</p>
+      ) : (
+        <div className="status-list">
+          {registrations.map(r => (
+            <div key={r._id} className="status-card">
+              ✅ Registered for <b>{r.event.title}</b>
+            </div>
+          ))}
         </div>
-      ))}
+      )}
     </div>
   );
 }

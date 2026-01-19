@@ -1,9 +1,14 @@
 const router = require("express").Router();
 const auth = require("../middleware/authMiddleware");
-const role = require("../middleware/roleMiddleware");
-const { createEvent, getEvents } = require("../controllers/eventController");
+const {
+  getEvents,
+  createEvent
+} = require("../controllers/eventController");
 
-router.post("/", auth, role("ORGANIZER"), createEvent);
+// ✅ View events (USER + ORGANIZER)
 router.get("/", auth, getEvents);
+
+// ✅ Create event (ORGANIZER only)
+router.post("/", auth, createEvent);
 
 module.exports = router;

@@ -1,13 +1,10 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "https://event-registration-system-60cz.onrender.com/api",
-  headers: {
-    "Content-Type": "application/json"
-  }
+  baseURL: "https://event-registration-system-60cz.onrender.com/api"
 });
 
-// 🔐 Attach token ONLY if exists
+// 🔴 THIS PART IS CRITICAL
 API.interceptors.request.use((req) => {
   const token = localStorage.getItem("token");
   if (token) {
