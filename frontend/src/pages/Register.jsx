@@ -6,7 +6,8 @@ export default function Register() {
     name: "",
     email: "",
     password: "",
-    role: "USER"
+    role: role.toUpperCase()
+    
   });
 
   const register = async () => {
